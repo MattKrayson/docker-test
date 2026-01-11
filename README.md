@@ -115,7 +115,7 @@ docker-compose restart
 If port 3000 is already in use, you can modify the port mapping in `docker-compose.yml`:
 ```yaml
 ports:
-  - "8080:3000"  # Maps host port 8080 to container port 3000
+  - "7070:3000"  # Maps host port 8080 to container port 3000
 ```
 
 **Container won't start:**
@@ -126,42 +126,47 @@ docker-compose logs web
 
 ## Deployment to a Server
 
-### Step 1: Build and Push Image to Docker Hub
+### Option 1: Build Directly on the Server (Recommended if no local Docker)
+
+1. **Push your code to GitHub** (see instructions above)
+
+2. **On your server, clone the repository:**
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+```
+
+3. **Build and run with docker-compose:**
+```bash
+docker-compose up -d --build
+```
+
+That's it! The server will build and run the image locally.
+
+### Option 2: Build and Push from Docker Hub
+
+If Docker is installed on your development machine:
 
 1. **Login to Docker Hub:**
 ```bash
 docker login
 ```
 
-2. **Build the image with your Docker Hub username:**
+2. **Build the image:**
 ```bash
-docker build -t YOUR_DOCKERHUB_USERNAME/docker-express-app:latest .
+docker build -t mattkrayson/docker-express-app:latest .
 ```
 
 3. **Push to Docker Hub:**
 ```bash
-docker push YOUR_DOCKERHUB_USERNAME/docker-express-app:latest
+docker push mattkrayson/docker-express-app:latest
 ```
 
-### Step 2: Deploy on Your Server
-
-1. **On your server, create a directory:**
-```bash
-mkdir docker-express-app && cd docker-express-app
-```
-
-2. **Create or download the production docker-compose file:**
-```bash
-curl -o docker-compose.yml https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/docker-compose.prod.yml
-```
-
-Or manually create `docker-compose.yml`:
+4. **On your server, create `docker-compose.yml`:**
 ```yaml
-version: '3.8'
-
 services:
   web:
-    image: YOUR_DOCKERHUB_USERNAME/docker-express-app:latest
+    image: mattkrayson/docker-express-app:latest
     ports:
       - "3000:3000"
     environment:
@@ -169,19 +174,23 @@ services:
     restart: unless-stopped
 ```
 
-3. **Pull and run the container:**
+5. **Pull and run:**
 ```bash
 docker-compose pull
 docker-compose up -d
 ```
 
-The application will now be running on your server at `http://YOUR_SERVER_IP:3000`
-
 ### Updating the Deployment
 
-When you make changes:
-1. Rebuild and push the image from your development machine
-2. On the server, pull and restart:
+**Option 1 (Git-based):**
+```bash
+git pull
+docker-compose up -d --build
+```
+
+**Option 2 (Docker Hub):**
+1. Rebuild and push from development machine
+2. On server:
 ```bash
 docker-compose pull
 docker-compose up -d

@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   web:
-    image: YOUR_DOCKERHUB_USERNAME/docker-express-app:latest
+    image: mattkrayson/docker-express-app:latest
     ports:
       - "3000:3000"
     environment:
