@@ -1,20 +1,40 @@
-# Use official Node.js runtime as base image
-FROM node:18-alpine
+# Multi-stage build for React + Express app
+# Stage 1: Build React frontend
+FROM node:18-alpine AS client-build
 
-# Set working directory in container
-WORKDIR /usr/src/app
+WORKDIR /app/client
 
-# Copy package.json and package-lock.json (if exists)
-COPY package*.json ./
+# Copy client package files
+COPY client/package*.json ./
 
-# Install dependencies
+# Install client dependencies
 RUN npm install
 
-# Copy application source code
-COPY . .
+# Copy client source
+COPY client/ ./
 
-# Expose port 3000
-EXPOSE 3000
+# Build React app
+RUN npm run build
+
+# Stage 2: Setup Express server
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+# Copy server package files
+COPY package*.json ./
+
+# Install server dependencies
+RUN npm install --only=production
+
+# Copy server source
+COPY server.js ./
+
+# Copy built React app from previous stage
+COPY --from=client-build /app/client/build ./client/build
+
+# Expose port 5000
+EXPOSE 5000
 
 # Start the application
 CMD ["npm", "start"]

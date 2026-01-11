@@ -1,67 +1,118 @@
-# Docker Express Web App
+# Image to Base64 Converter
 
-A simple Node.js web application using Express.js, containerized with Docker and orchestrated with Docker Compose.
+A full-stack React + Express application that converts images to Base64 encoded strings. Built with Bootstrap styling and fully containerized with Docker.
 
 ## Features
 
-- Displays "Hello, user!" greeting
-- Shows the current date and time (dynamically generated on each request)
-- Runs on port 3000
-- Fully containerized with Docker
+- 📤 **Upload Images**: Support for JPG, PNG, GIF, WebP, SVG, and BMP formats
+- 🔄 **Instant Conversion**: Convert images to Base64 encoded strings
+- 👁️ **Live Preview**: See your image before conversion
+- 📋 **Copy to Clipboard**: One-click copy functionality
+- 🎨 **Bootstrap UI**: Modern, responsive design
+- 🐳 **Fully Dockerized**: Easy deployment anywhere
+- 📦 **Pull from Docker Hub**: Deploy without building
+
+## Tech Stack
+
+- **Frontend**: React 18, Bootstrap 5
+- **Backend**: Express.js, Multer
+- **Containerization**: Docker, Docker Compose
 
 ## Project Structure
 
 ```
 docker-test/
-├── server.js           # Express server application
-├── package.json        # Node.js dependencies
-├── Dockerfile          # Docker container configuration
-├── docker-compose.yml  # Docker Compose orchestration
-└── README.md          # This file
+├── client/                  # React frontend
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── ImageUploader.js
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+├── server.js               # Express backend
+├── package.json            # Server dependencies
+├── Dockerfile              # Multi-stage build
+├── docker-compose.yml      # Development compose
+├── docker-compose.prod.yml # Production compose
+└── README.md
 ```
 
-## Prerequisites
+## Quick Start (Development)
 
-- [Docker](https://www.docker.com/get-started) installed on your system
-- [Docker Compose](https://docs.docker.com/compose/install/) installed on your system
+### Prerequisites
 
-## Setup and Installation
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-### 1. Clone or navigate to the project directory
+### Run with Docker Compose
 
 ```bash
+git clone <your-repo-url>
 cd docker-test
-```
-
-### 2. Build and run the application using Docker Compose
-
-```bash
 docker-compose up --build
 ```
 
-This command will:
-- Build the Docker image from the Dockerfile
-- Create and start the container
-- Expose port 3000 to your host machine
+Access the app at **http://localhost:5000**
 
-### 3. Access the application
+## Deployment to Server
 
-Open your web browser and navigate to:
+### Option 1: Pull from Docker Hub (Recommended)
 
+1. **On your server, create `docker-compose.yml`:**
+
+```yaml
+services:
+  web:
+    image: mattkrayson/image-to-base64:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
 ```
-http://localhost:3000
-```
 
-You should see the greeting message and the current date/time.
+2. **Pull and run:**
 
-## Docker Compose Commands
-
-### Start the application (foreground)
 ```bash
-docker-compose up
+docker-compose pull
+docker-compose up -d
 ```
 
-### Start the application (background/detached mode)
+The app will be running at `http://YOUR_SERVER_IP:5000`
+
+### Option 2: Build on Server
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd docker-test
+
+# Build and run
+docker-compose up -d --build
+```
+
+## Publishing to Docker Hub
+
+If you want to push your own version:
+
+```bash
+# Login to Docker Hub
+docker login
+
+# Build the image
+docker build -t YOUR_USERNAME/image-to-base64:latest .
+
+# Push to Docker Hub
+docker push YOUR_USERNAME/image-to-base64:latest
+```
+
+Then update `docker-compose.prod.yml` with your image name.
+
+## Docker Commands
+
+### Start the application
 ```bash
 docker-compose up -d
 ```
@@ -71,129 +122,85 @@ docker-compose up -d
 docker-compose down
 ```
 
-### Rebuild and restart the application
-```bash
-docker-compose up --build
-```
-
 ### View logs
 ```bash
-docker-compose logs
+docker-compose logs -f
 ```
 
-### View running containers
+### Rebuild after changes
 ```bash
-docker-compose ps
+docker-compose up -d --build
 ```
 
-## Manual Docker Commands (without Docker Compose)
+## Local Development (without Docker)
 
-If you prefer to use Docker directly:
+### Backend
 
-### Build the image
 ```bash
-docker build -t express-app .
+npm install
+npm start
 ```
 
-### Run the container
+Server runs on http://localhost:5000
+
+### Frontend
+
 ```bash
-docker run -p 3000:3000 express-app
+cd client
+npm install
+npm start
 ```
 
-## Development
+Development server runs on http://localhost:3000 (proxies to backend)
 
-The application uses volume mounting in docker-compose.yml, which means changes to `server.js` will be reflected when you restart the container (though you'll need to restart for Node.js changes to take effect).
+## API Endpoints
 
-To restart after making changes:
-```bash
-docker-compose restart
+### POST /api/upload
+
+Upload an image and receive Base64 encoded string.
+
+**Request:**
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Body: `image` file field
+
+**Response:**
+```json
+{
+  "success": true,
+  "base64": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+  "filename": "example.png",
+  "size": 12345,
+  "mimetype": "image/png"
+}
 ```
+
+## Configuration
+
+- **Port**: Default is 5000 (change in `server.js` and docker-compose files)
+- **File Size Limit**: 10MB (configurable in `server.js`)
+- **Allowed Formats**: jpeg, jpg, png, gif, webp, svg, bmp
 
 ## Troubleshooting
 
 **Port already in use:**
-If port 3000 is already in use, you can modify the port mapping in `docker-compose.yml`:
 ```yaml
+# In docker-compose.yml, change:
 ports:
-  - "7070:3000"  # Maps host port 8080 to container port 3000
+  - "8080:5000"  # Use port 8080 on host
 ```
 
 **Container won't start:**
-Check the logs with:
 ```bash
 docker-compose logs web
 ```
 
-## Deployment to a Server
-
-### Option 1: Build Directly on the Server (Recommended if no local Docker)
-
-1. **Push your code to GitHub** (see instructions above)
-
-2. **On your server, clone the repository:**
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
-```
-
-3. **Build and run with docker-compose:**
-```bash
-docker-compose up -d --build
-```
-
-That's it! The server will build and run the image locally.
-
-### Option 2: Build and Push from Docker Hub
-
-If Docker is installed on your development machine:
-
-1. **Login to Docker Hub:**
-```bash
-docker login
-```
-
-2. **Build the image:**
-```bash
-docker build -t mattkrayson/docker-express-app:latest .
-```
-
-3. **Push to Docker Hub:**
-```bash
-docker push mattkrayson/docker-express-app:latest
-```
-
-4. **On your server, create `docker-compose.yml`:**
-```yaml
-services:
-  web:
-    image: mattkrayson/docker-express-app:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    restart: unless-stopped
-```
-
-5. **Pull and run:**
-```bash
-docker-compose pull
-docker-compose up -d
-```
-
-### Updating the Deployment
-
-**Option 1 (Git-based):**
-```bash
-git pull
-docker-compose up -d --build
-```
-
-**Option 2 (Docker Hub):**
-1. Rebuild and push from development machine
-2. On server:
-```bash
-docker-compose pull
-docker-compose up -d
+**Image too large:**
+Increase the file size limit in `server.js`:
+```javascript
+limits: {
+  fileSize: 20 * 1024 * 1024, // 20MB
+}
 ```
 
 ## License
