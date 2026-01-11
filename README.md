@@ -124,6 +124,69 @@ Check the logs with:
 docker-compose logs web
 ```
 
+## Deployment to a Server
+
+### Step 1: Build and Push Image to Docker Hub
+
+1. **Login to Docker Hub:**
+```bash
+docker login
+```
+
+2. **Build the image with your Docker Hub username:**
+```bash
+docker build -t YOUR_DOCKERHUB_USERNAME/docker-express-app:latest .
+```
+
+3. **Push to Docker Hub:**
+```bash
+docker push YOUR_DOCKERHUB_USERNAME/docker-express-app:latest
+```
+
+### Step 2: Deploy on Your Server
+
+1. **On your server, create a directory:**
+```bash
+mkdir docker-express-app && cd docker-express-app
+```
+
+2. **Create or download the production docker-compose file:**
+```bash
+curl -o docker-compose.yml https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/docker-compose.prod.yml
+```
+
+Or manually create `docker-compose.yml`:
+```yaml
+version: '3.8'
+
+services:
+  web:
+    image: YOUR_DOCKERHUB_USERNAME/docker-express-app:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+```
+
+3. **Pull and run the container:**
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
+The application will now be running on your server at `http://YOUR_SERVER_IP:3000`
+
+### Updating the Deployment
+
+When you make changes:
+1. Rebuild and push the image from your development machine
+2. On the server, pull and restart:
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
 ## License
 
 ISC
